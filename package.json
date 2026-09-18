@@ -1,0 +1,44 @@
+{
+  "name": "dsh-maintainer-doc-guard",
+  "version": "0.4.0",
+  "description": "DeepSeek Harness bundle with two real gates. (1) A standing system-prompt section that tells the model to read the workspace maintainer documents (plan.md / conventions.md / stack.md / state.md / maintainer/README.md) before every operation, so small-model context compaction cannot erase long-term project memory. (2) A `tools/pre-execute` precedent gate that denies a write/edit inside a guarded infrastructure area until a working same-basename precedent has been read. (3) A `tools/pre-execute` intent gate that denies the turn's first side-effecting call when the model never said what the step is for. Plus a right-sidebar tab that views and edits those documents, and seven runtime knobs exposed in the harness settings page (设置 → 插件 → 插件配置).",
+  "type": "module",
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "memory",
+    "context-compaction",
+    "maintainer-documents",
+    "deepseek-flash",
+    "intent-gate",
+    "execution-discipline"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar-right"
+      ]
+    }
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.log
+.tmp/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*~

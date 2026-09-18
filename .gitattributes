@@ -1,0 +1,12 @@
+# Normalise everything to LF in the repository. The shipped files are plain
+# ESM/YAML/JSON read by Node and the harness, and the upstream project is
+# developed on Unix, so a fixed LF both keeps diffs stable and avoids the
+# CRLF-in-a-shebang class of bug if scripts are ever added.
+* text=auto eol=lf
+
+# Binary assets, should any be added later (screenshots for the marketplace).
+*.png binary
+*.jpg binary
+*.webp binary
+*.gif binary
+*.ico binary
