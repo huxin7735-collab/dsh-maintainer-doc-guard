@@ -1,29 +1,47 @@
 # dsh-maintainer-doc-guard bundle layer.
 #
-# Adds ONE host-plane row with four behaviours:
+# Adds ONE host-plane row with six behaviours:
 #   1. a system-prompt section that reminds the model to read the workspace
 #      maintainer documents before every operation. Re-evaluated on every prompt
 #      assembly (every turn), never accumulated in the conversation history, so a
 #      heavy-thinking small model whose context gets compacted still re-hydrates
 #      its project memory from files each turn.
-#   2. a `tools/pre-execute` PRECEDENT gate: a write/edit inside a guarded
+#   2. an OBJECTIVE ANCHOR section: the user's latest instruction, quoted
+#      verbatim, plus the precedence rule that settles which of the three
+#      competing "tasks" in a long turn wins. Covered by `config.anchor.*`.
+#   3. a `tools/pre-execute` PRECEDENT gate: a write/edit inside a guarded
 #      infrastructure area is denied until the session has read a working
 #      same-basename precedent. Covered by `config.gate.*` on this row.
-#   3. a `tools/pre-execute` INTENT gate: the turn's first side-effecting call is
-#      denied once when the turn's own assistant text never said what the step is
+#   4. a `tools/pre-execute` INTENT gate: the turn's side-effecting calls are
+#      policed when the turn's own assistant text never said what the step is
 #      for. Covered by `config.intent.*` on this row.
-#   4. a settings namespace (`maintainer-doc-guard`) so SEVEN switches
+#   5. a NUDGE stage in front of that gate — correct first, block only if the
+#      correction is ignored. The first `config.nudge.grace` unexplained actions
+#      are allowed through with a reminder injected via `agent.inject` (read by
+#      the model at its next step); a turn that runs `config.nudge.afterSteps`
+#      steps without the user speaking again gets one objective check; only what
+#      survives both is denied. Covered by `config.nudge.*` on this row.
+#   6. a settings namespace (`maintainer-doc-guard`) so TEN switches
 #      (`gate.enabled` / `gate.dryRun` / `gate.maxDeniesPerTarget` /
 #      `intent.enabled` / `intent.dryRun` / `intent.maxBlocksPerTurn` /
-#      `intent.minChars`) can be changed at runtime in 设置 → 插件 → 插件配置
-#      with no restart. Both gates read their config per tool call, so a flipped
-#      switch is live. Requires a settings provider (dsh-full mounts
-#      `@deepseek-ai/dsh-settings-file`; the web profile inherits it from
-#      dsh-base) — without one everything falls back to this composition entry.
+#      `intent.minChars` / `anchor.enabled` / `nudge.grace` /
+#      `nudge.afterSteps`) can be changed at runtime in 设置 → 插件 → 插件配置
+#      with no restart. Every gate reads its config per tool call and the anchor
+#      re-reads per assembly, so a flipped switch is live. Requires a settings
+#      provider (dsh-full mounts `@deepseek-ai/dsh-settings-file`; the web
+#      profile inherits it from dsh-base) — without one everything falls back to
+#      this composition entry.
 #
-# Precedence: the intent gate is evaluated first; it only inspects the turn's
-# first side-effecting call, so a call that survives it may still be denied by
-# the precedent gate. The two budgets are independent.
+# Precedence: the nudge/intent judgement is evaluated first; it only inspects
+# the turn's side-effecting calls, so a call that survives it may still be
+# denied by the precedent gate. The two budgets are independent.
+#
+# Placement: the anchor renders as its OWN section at `anchor.order` (default
+# 10150 — after the Web surface at 10100, before the deployment persona suffix
+# at 10200). Late on purpose: an unchanged prompt keeps prefix reuse and a
+# changed one loses it from the first changed token, and the anchor is the one
+# section that changes whenever the user speaks. Lower it if the objective
+# should outrank the tool guidance, at the cost of more cache churn.
 #
 # Tuning is done by patching THIS id from the profile's cordis.patch.yml — e.g.
 #
@@ -36,6 +54,12 @@
 #       intent:
 #         dryRun: true          # log would-be intent denials, do not block
 #         minChars: 24          # how much prose counts as "explained itself"
+#       anchor:
+#         enabled: false        # no standing objective section
+#         maxChars: 400         # clip a long instruction harder
+#       nudge:
+#         grace: 0              # deny the first offence again (pre-0.5 behaviour)
+#         afterSteps: 0         # disable the drift check
 #
 # Anything you set here becomes the settings page's *base* layer: a value the
 # user never touched in the UI keeps this decision.
