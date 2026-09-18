@@ -510,3 +510,10 @@ the composition example above is the *generic* form. The guarded areas, the
 document names and the tuning all live in that one row's `config:` block, which
 ships in `cordis.patch.yml` here — read it before wiring the plugin into a
 harness that guards different directories.
+
+### Release notes
+
+See [CHANGELOG.md](CHANGELOG.md) for what changed in each version, including the
+design notes behind the objective anchor and the nudge stage, the reason a
+hard-stop-the-turn escalation was deliberately *not* implemented, and what remains
+unverified.
