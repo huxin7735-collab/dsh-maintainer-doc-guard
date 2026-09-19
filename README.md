@@ -486,10 +486,25 @@ Requires dsh `0.1.5-rc.*` and Node >= 20. The plugin is **build-free**: `lib/` i
 the shipped source, there is no compile step, and it depends on nothing but the
 harness itself.
 
+### Quick install (recommended)
+
+```
+dsh plugin --profile web add github:huxin7735-collab/dsh-maintainer-doc-guard
+```
+
+Then restart dsh (`dsh web`) and refresh the page. This is the command the plugin
+marketplaces expect in a README; substitute your own profile name for `web` if
+you run a different one.
+
+> The marketplace's one-click install uses this same spec. Nothing else needs to
+> be written by hand.
+
+### Manual install (if you prefer to vendor the source)
+
 **1. Get the code anywhere on disk.**
 
 ```
-git clone <this-repo-url> dsh-maintainer-doc-guard
+git clone https://github.com/huxin7735-collab/dsh-maintainer-doc-guard.git
 ```
 
 **2. Declare it in the profile** — `$DSH_HOME/profiles/web/package.json`:
