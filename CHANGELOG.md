@@ -6,6 +6,67 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.5.1] — 2026-09-19
+
+**Theme: the guard now behaves correctly *inside a delegated child*.**
+
+0.5.0 shipped a single `includeSubagents` switch that gated both prompt sections at
+once, and the objective anchor could never populate in a child at all. Reading the
+subagent implementation showed why, and this release fixes the three gaps.
+
+### Fixed — the anchor was always empty inside a child
+
+The objective recorder only adopted a message when `source.kind === 'user'`, on the
+assumption that a delegation is not stamped that way. It is: the harness delivers a
+child's opening prompt through the ordinary user-message path, so a child's task
+message is **indistinguishable from a human's by `source` alone**. The recorder now
+discriminates positionally per lineage instead — a child adopts the **first** non-empty
+user-role message once (its delegation) and keeps it; further messages from a real
+sender do not silently replace the task it was handed. The top-level rule is unchanged:
+the latest user message wins, and plugin/tool notices are still never adopted.
+
+### Fixed — a child was shown the parent's objective under the parent's wording
+
+Rendering "the user's latest instruction" inside a child inverts the precedence rule: the
+child has no user instruction, and quoting the parent's objective invites it to chase the
+original request instead of the task it was actually given. When the anchor is enabled for
+children it now re-titles itself (`## Your delegated task — what you were sent here to do`)
+and quotes the child's own delegation, under a precedence rule that names the delegated
+task first. New `anchor.childTitle` / `anchor.childIntro` / `anchor.childPriorities`
+override the wording.
+
+### Changed — one coarse switch split into two independent policies
+
+`includeSubagents` is replaced by two switches, because the two sections want opposite
+answers inside a child — the documents are inherited and worth reading, the parent's
+objective is not the child's task:
+
+| contribution | knob | default | meaning |
+|---|---|---|---|
+| document reminder | `inSubagents` | off | `true` = also render in children and grandchildren |
+| objective anchor | `anchor.inSubagents` | off | `true` = render the child's own delegation |
+
+Only an explicit `true` opts in; the default, `false`, or a typo keeps a contribution at
+the top level, so a mistake fails silent rather than leaking a parent's objective into a
+child. A 0.5.0 composition that set `includeSubagents: true` keeps working — the old
+spelling is still read as `inSubagents`.
+
+### Changed — both subagent policies are composition-only
+
+Neither is on the settings card. The card holds **exactly ten fields**, which is a hard
+ceiling (an eleventh makes the whole card fail to mount), and delegation reach is a
+per-deployment decision that belongs in `cordis.patch.yml`.
+
+### Verified
+
+Driven against the real module with a stub harness context: a depth matrix
+(`undefined` / `0` / `1` / `2` × four switch combinations) and seven record-boundary cases
+(latest-wins, plugin/tool notices ignored, delegation adopted once, `enabled: false`,
+`{{ }}` sanitisation). Gates and the `session/event` observer were already
+depth-independent and are unaffected by this change.
+
+---
+
 ## [0.5.0] — 2026-09-18
 
 **Theme: the guard now protects the *objective*, not only the *method*.**

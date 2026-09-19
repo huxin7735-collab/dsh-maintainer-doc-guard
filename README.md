@@ -138,6 +138,51 @@ Two design choices worth naming:
   too; `source.kind === 'user'` is the discriminator the loop itself uses, so the
   anchor can never end up quoting the guard back at itself.
 
+### Inside a delegated child
+
+The anchor is off in subagents by default, and the reason is not performance — it
+is correctness. A delegated child (dsh's `subagent` tool) is started by a
+delegation message, not by something a human typed, so the parent's "latest user
+instruction" is **not** the child's job. Rendering it there would invert the very
+precedence rule the anchor exists to enforce, and invite the child to chase the
+original request instead of the task it was handed.
+
+Set `anchor.inSubagents: true` when you do want it, and the section switches
+identity for that reader:
+
+```
+## Your delegated task — what you were sent here to do
+
+> 把解析器改成允许尾逗号，周五前。
+
+This is the task you were delegated. It is quoted from the message that started
+your session. It outranks anything you inferred since, and it does not widen by
+being interesting.
+
+Precedence when these disagree:
+1. the delegated task, quoted above
+2. the plan you stated in your own previous turn
+3. a lead, idea, or side-quest you found by yourself
+```
+
+Two mechanics make that work:
+
+- **The delegation is adopted positionally, per lineage.** A child's opening
+  message is delivered through the ordinary user-message path, so `source.kind`
+  cannot tell it apart from a human's. Instead a child adopts the **first**
+  non-empty user-role message it sees and keeps it; a later real send does not
+  quietly replace the task it was given. At the top level nothing changes — the
+  latest user message still wins, and plugin/tool notices are still ignored.
+- **Reach is one switch per contribution.** The document reminder and the anchor
+  are separately switchable (`inSubagents` / `anchor.inSubagents`) because they
+  want opposite answers here: the documents are inherited through the parent's
+  `cwd` and worth reading; the parent's objective is not the child's task. `true`
+  opts a contribution into children and grandchildren; the default, `false`, or
+  anything unrecognised keeps it at the top level, so a typo fails silent.
+
+Both switches are composition-only — see `cordis.patch.yml`, not the settings
+card, which holds exactly ten fields.
+
 The anchor renders to an empty string — and therefore disappears, costing no
 tokens — until the session has seen a user message. Because the loop appends the
 accepted user batch during the step that claimed it, the *next* assembly already
@@ -188,7 +233,7 @@ Row config (all optional):
 | `enabled` | `true` | turn the section off without removing the row |
 | `docs` | `["plan.md","conventions.md","stack.md","state.md","maintainer/README.md"]` | document names to probe |
 | `onlyWhenPresent` | `false` | when `true`, stay silent unless at least one document exists |
-| `includeSubagents` | `false` | also inject into subagents |
+| `inSubagents` | `false` | also inject the document reminder into delegated children (`true` opts in) |
 | `order` | `100` | section sort order (after the persona prefix at `0`) |
 | `walkUp` | `6` | ancestor levels to walk looking for the project root |
 | `projectMarkers` | `[".git"]` | root markers for the walk-up |
@@ -235,10 +280,12 @@ Anchor config lives under `anchor:` and is also all optional:
 | key | default | meaning |
 |---|---|---|
 | `anchor.enabled` | `true` | render the standing objective section at all |
+| `anchor.inSubagents` | `false` | also render inside delegated children, quoting the child's **own delegation** under child-specific wording (`true` opts in) |
 | `anchor.order` | `10150` | section sort order — late on purpose, so the section that changes on every user message invalidates as little prefix as possible |
 | `anchor.maxChars` | `800` | clip the quoted instruction, marking the cut with `… (truncated)` |
 | `anchor.title` / `anchor.intro` | built-in | override the heading / the framing sentence |
 | `anchor.priorities` | the three-step rule | the precedence list, rendered as a numbered list after the quote |
+| `anchor.childTitle` / `anchor.childIntro` / `anchor.childPriorities` | built-in | override all three for the child reading — each defaults to wording that says "your delegated task" rather than "the user's latest instruction" |
 
 Nudge config lives under `nudge:` and is also all optional:
 
@@ -288,10 +335,13 @@ How it works, and what it deliberately does *not* do:
   re-reads its config per *assembly* for the same reason.
 - Only these ten knobs are exposed. `gate.tools`, `gate.guardedGlobs`,
   `gate.exemptGlobs`, `gate.scanLevels`, `intent.tools`, `anchor.order`,
-  `anchor.maxChars`, `anchor.priorities` and friends are *deployment decisions*,
-  not preferences, and stay in the composition entry — as does everything about
-  the reminder itself. `anchor.order` in particular is fixed at registration:
-  changing it means editing the composition entry and restarting.
+  `anchor.maxChars`, `anchor.priorities`, **`inSubagents`, `anchor.inSubagents`**
+  and friends are *deployment decisions*, not preferences, and stay in the
+  composition entry — as does everything about the reminder itself.
+  `anchor.order` in particular is fixed at registration: changing it means
+  editing the composition entry and restarting. The ten-field ceiling is hard:
+  the provider accepts one shared-namespace card of at most ten knobs, so an
+  eleventh makes the whole card fail to mount.
 - The card is dispatched by the namespace key, so the section only renders it
   once the host has actually served the namespace. When no provider is mounted
   the card says so and stays read-only rather than pretending a write landed.

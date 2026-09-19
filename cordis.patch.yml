@@ -8,7 +8,9 @@
 #      its project memory from files each turn.
 #   2. an OBJECTIVE ANCHOR section: the user's latest instruction, quoted
 #      verbatim, plus the precedence rule that settles which of the three
-#      competing "tasks" in a long turn wins. Covered by `config.anchor.*`.
+#      competing "tasks" in a long turn wins. Inside a delegated child (opt-in)
+#      it re-titles itself and quotes the child's own delegation instead — see
+#      SUBAGENTS below. Covered by `config.anchor.*`.
 #   3. a `tools/pre-execute` PRECEDENT gate: a write/edit inside a guarded
 #      infrastructure area is denied until the session has read a working
 #      same-basename precedent. Covered by `config.gate.*` on this row.
@@ -32,6 +34,31 @@
 #      profile inherits it from dsh-base) — without one everything falls back to
 #      this composition entry.
 #
+# SUBAGENTS — both sections reach delegated children only if this composition
+# says so, and the two are switched INDEPENDENTLY because they want opposite
+# answers inside a child:
+#
+#   * `inSubagents` (top level, default off) governs the DOCUMENT REMINDER.
+#     A child inherits its parent's `cwd`, so the documents it would be told to
+#     read are the same real files. Set it to `true` when delegated work should
+#     carry the same project-memory discipline as the parent.
+#
+#   * `anchor.inSubagents` (default off) governs the OBJECTIVE ANCHOR. This one
+#     defaults off for a reason: at the top level the anchor quotes "the user's
+#     latest instruction", but inside a child the *user* may never have spoken —
+#     the child was started by a delegation. Rendering the parent's objective
+#     there would invert the precedence rule and invite the child to chase the
+#     original request instead of the task it was actually given. When enabled,
+#     the anchor re-titles itself ("Your delegated task") and quotes the child's
+#     DELEGATION message, adopted once from the message that started the session.
+#
+#   Set either to `true` to opt in. Anything else — the default, `false`, or an
+#   unrecognised value — keeps that contribution at the top level only, so a
+#   typo fails silent rather than leaking a parent's objective into a child.
+#
+#   Both are composition-only knobs. They are deliberately absent from the
+#   settings card, which holds exactly ten fields (a hard ceiling).
+#
 # Precedence: the nudge/intent judgement is evaluated first; it only inspects
 # the turn's side-effecting calls, so a call that survives it may still be
 # denied by the precedent gate. The two budgets are independent.
@@ -47,6 +74,7 @@
 #
 #   - id: maintainer-doc-guard
 #     config:
+#       inSubagents: true       # document reminder also inside delegated children
 #       gate:
 #         dryRun: true          # observe first, enforce later
 #         enabled: false        # drop the precedent gate, keep the rest
@@ -56,7 +84,14 @@
 #         minChars: 24          # how much prose counts as "explained itself"
 #       anchor:
 #         enabled: false        # no standing objective section
+#         inSubagents: true     # ...or give each child its OWN delegation as anchor
 #         maxChars: 400         # clip a long instruction harder
+#         childTitle: '## 你被派的任务'   # re-title it for a child's reading
+#         childIntro: '……'
+#         childPriorities:
+#           - 上面引用的派工单
+#           - 你自己上一轮说出的计划
+#           - 你自己发现的线索
 #       nudge:
 #         grace: 0              # deny the first offence again (pre-0.5 behaviour)
 #         afterSteps: 0         # disable the drift check
