@@ -15,8 +15,16 @@ The proven fix (measured on DeepSeek V4 Flash) is to externalise that memory int
 re-hydrated from files instead of recalled from a lossy summary:
 
 ```
-plan.md   conventions.md   stack.md   state.md   maintainer/README.md
+.dsh-maintainer-doc-guard/
+  <session-id>/            # one isolated set per conversation
+    plan.md   conventions.md   stack.md   state.md   maintainer/README.md
 ```
+
+The five documents live in a **per-session** subfolder under `.dsh-maintainer-doc-guard/`
+(override the parent with the `docsDir` knob). Each conversation gets its own set, so two
+sessions in the same workspace never share or mix the same file. The plugin creates the
+session folder and a blank file for each document on first open of the panel, so there is
+nothing to set up by hand and reads are instant.
 
 ## What this plugin does
 
@@ -232,6 +240,7 @@ Row config (all optional):
 |---|---|---|
 | `enabled` | `true` | turn the section off without removing the row |
 | `docs` | `["plan.md","conventions.md","stack.md","state.md","maintainer/README.md"]` | document names to probe |
+| `docsDir` | `".dsh-maintainer-doc-guard"` | folder (relative to each workspace) that holds the documents; created on first access |
 | `onlyWhenPresent` | `false` | when `true`, stay silent unless at least one document exists |
 | `inSubagents` | `false` | also inject the document reminder into delegated children (`true` opts in) |
 | `order` | `100` | section sort order (after the persona prefix at `0`) |
@@ -565,8 +574,8 @@ profile beyond those two declarations, so there is no migration step.
 
 Drop the `dsh.profile.bundles` entry (that is what unmounts it), then the
 `dependencies` line, then `pnpm install`. The documents it manages —
-`plan.md`, `conventions.md`, `stack.md`, `state.md`, `maintainer/README.md` — are
-ordinary workspace files and are left untouched.
+`plan.md`, `conventions.md`, `stack.md`, `state.md`, `maintainer/README.md` (now under
+`.dsh-maintainer-doc-guard/`) — are ordinary workspace files and are left untouched.
 
 ### Note on this repository
 

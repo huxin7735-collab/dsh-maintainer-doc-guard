@@ -6,6 +6,80 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.5.2] — 2026-09-20
+
+**Theme: each conversation (session) gets its own isolated, pre-populated
+maintainer-document set; the side panel and its REST route are hardened so they
+can no longer return an empty body.**
+
+### Added — per-session documents
+Documents are no longer shared across sessions in a workspace. The panel sends
+the client `sessionId` and the server scopes the set to
+`<workspace>/<docsDir>/<sanitized-sessionId>/` (default `<docsDir>` =
+`.dsh-maintainer-doc-guard`). Every session opens with five blank, editable,
+saveable documents, so reads are instant and two sessions in the same workspace
+never collide on or mix the same file. `collectFound` no longer pre-creates a
+workspace-level shared folder (that would be the shared set this change
+removes). `docsDir` (config knob) and `sanitizeSession()` keep the folder name
+safe (`..` and path separators are stripped).
+
+### Changed — intent gate is now session-scoped, not re-armed every turn
+The intent gate used to reset its "has the model said what this step is for"
+ledger on every turn boundary, so a model doing correct work across many turns
+was blocked at the open of each turn unless it re-typed ≥`minChars` of prose.
+`textChars` now persists across turns and is reset **only when a new user
+instruction arrives** (`noteUserMessage`) — the same event that re-anchors the
+objective. A model states intent once, then works freely for the rest of the
+session; a new user message re-arms the requirement because the task may have
+changed. Per-turn deny/nudge budgets still reset, so a turn can never deadlock.
+
+### Changed — drift reminder suppressed on well-narrated long turns
+The drift reminder fired purely on step count (`afterSteps`), which nagged
+normal long-but-productive tasks. It is now suppressed when the turn's
+`textChars` already meets `minChars` — a turn the model is narrating well is, by
+that same fact, not the "burned a whole turn on a side-quest" failure the
+reminder targets.
+
+### Added — destructive calls pulled into both gates
+A new `isDestructiveTool()` matcher (whole-word `delete`/`remove`/`trash`/
+`unlink`/`purge`/`wipe`, never the bare `rm`/`del` so names like `transform`
+are safe) routes destructive tool calls through the same gates as writes:
+- the **precedent gate** now requires a read precedent before a destructive call
+  inside a guarded infrastructure area;
+- the **intent gate** now requires stated intent before any destructive call
+  (nudge-first), closing "deleted a file without saying what/why".
+
+### Fixed — `maintainer/README.md` was never pre-created
+`writeFileSync` does not create parent directories, so the nested `maintainer/`
+subfolder failed with ENOENT and that one document was silently missing.
+`ensureDocs` now `mkdirSync(dirname(target), {recursive:true})` before writing.
+
+### Fixed — panel showed a cryptic "Unexpected end of JSON input"
+Two independent defects caused an empty response body:
+- the route's session-scoping variables (`lastSession`, `sanitizeSession`) were
+  referenced but never declared, so a bare `GET` threw an uncaught
+  `ReferenceError` and the harness returned an empty body;
+- the browser `fetch` parsed the response as JSON without checking `response.ok`
+  or guarding an empty body.
+
+Both are now fixed: the variables are declared and `sanitizeSession` is defined;
+the server's `GET /docs` handler is wrapped in a try/catch that always answers
+with valid JSON (even on 500); and the client checks `response.ok`, reads the
+body as text first, and throws a clear Chinese message instead of the opaque
+one. If the panel still reports an empty body, the cause is a second/stale dsh
+instance on the port — confirm only one dsh process is running.
+
+### Note
+- No new settings-page knob: the destructive and drift changes reuse existing
+  thresholds (`minChars`, `afterSteps`) and the nudge-first staging.
+- Where the documents are stored changed again (workspace-shared → per-session).
+  Existing documents committed at the workspace root, or the old
+  `.<docsDir>/` shared set, are not auto-migrated; move them into
+  `.<docsDir>/<sessionId>/` (or set `docsDir` back to `.`) if you want to keep
+  hand-authored ones.
+
+---
+
 ## [0.5.1] — 2026-09-19
 
 **Theme: the guard now behaves correctly *inside a delegated child*.**
