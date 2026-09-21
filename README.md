@@ -264,6 +264,45 @@ as the cause, and which argument keys changed as the fix. Only observed facts;
 shell calls are excluded (a command string has no stable "same target"); capped at
 three lines per session; deduped by full line.
 
+### Subagents: the notices are asymmetric
+
+Ledger hits and auto-induction are OFF inside a delegated child by default:
+`isChildSession(session) && !subagentOptIn(config.inSubagents)` returns "no
+notice / no booking", the same policy as the document reminder (opt a child in
+with `inSubagents`). The number-landing check and the completion reminder have no
+child check at all, so they DO run in children — and because all four share one
+process-level switch group, a parent cannot quiet its children independently.
+
+### Costs and trade-offs (0.5.3)
+
+**What it buys.** The model stops losing the thread: it stays on topic, and it
+stops "solving" a long task with a grand detour that goes nowhere. In practice
+that is a noticeably more comfortable long-run experience than 4.0.
+
+**What it costs — the honest list.**
+
+1. **It touches the context, so prompt-cache hits sit at roughly 70-80 percent (operator's measurement).** The
+   force-injected documents and the appended anchor both rewrite part of the
+   prompt every round, so the rest of the prefix has to be recomputed. That is
+   the main bill for "stays on topic".
+2. **Notices repeat after a reload.** Hot-reloading or restarting the plugin
+   clears per-session bookkeeping (read set, notice version, induction count), so
+   "you have not read these documents" can fire again right after you did.
+3. **Subagent behaviour is asymmetric** (see the section above).
+4. **Fragment matching is substring-based.** A trigger written as
+   `edit + index.js` fires for any path containing `index.js`, including edits to
+   unrelated files.
+5. **Auto-induction is partial by construction.** Only "same target: failed, then
+   succeeded", shells excluded, at most three lines per session — and when the
+   retry changes no argument key, the recorded line says little.
+6. **The notices cost context too**, share one per-round budget, and the second
+   document reminder embeds the documents themselves.
+7. **The settings card is capped at ten fields**, so newer switches live in the
+   sidebar: process-level, lost on restart, persistence only via
+   `cordis.patch.yml`.
+8. **A notice is advice, not a guarantee.** Only the precedent and intent gates
+   actually deny, and both let the call through after a bounded number of tries.
+
 ## Configuration
 
 Row config (all optional):
