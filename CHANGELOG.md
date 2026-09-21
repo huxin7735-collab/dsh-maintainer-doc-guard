@@ -6,6 +6,45 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.5.3] — 2026-09-21
+
+**Theme: the ledger stops riding the prompt. `lessons.md` is delivered on demand —
+only the lines whose `触发` field matches the live call — and it fills itself in
+when a failure is followed by a success on the same target.**
+
+### Added — four advisory notices
+- **On-demand ledger hits**: a ledger line is delivered only when its trigger
+  matches the live call (same tool plus a path/command fragment present in the
+  call; substring match, `*` splits a fragment into AND-ed pieces). One hit per
+  line per session.
+- **Auto-induction**: a failed call on a managed tool followed by a successful call
+  on the SAME target appends one ledger line — the failure's own error text, plus
+  which argument keys changed. Observed facts only; shells excluded; at most three
+  lines per session; deduped by full line.
+- **Landing check for deleted numbers**: for `edit`, a net decrease in number runs
+  between `old_string` and `new_string` asks for the landing-place check before the
+  deletion stands.
+- **Completion standard**: after a successful write to a code artifact, the next
+  call is reminded once to state the verification and its actual reading.
+
+### Added — sidebar switch group and telemetry
+- `/dsh-maintainer-doc-guard/notices` (GET/PUT) plus four switches in the
+  right-sidebar tab: process-level and ON by default, deliberately outside the
+  ten-field settings card.
+- Counters for the notices, for the document section's own render, and for each
+  silent exit of the drift check, so "0 notices" can be told apart from "the
+  section never rendered".
+
+### Changed
+- `maintainer/README.md` seed rewritten as short instructions: what each document
+  is for, what each button does. `ensureDocs` upgrades it in place only while the
+  file still starts with an earlier seed signature — a README the operator rewrote
+  is left alone.
+- The document section force-injects `plan.md` + `conventions.md`; the ledger is
+  still listed but no longer injected every step.
+- The precedent gate's shell rule is clause-scoped: a guarded path and a write
+  signal must appear in the same statement.
+
 ## [0.5.2] — 2026-09-20
 
 **Theme: each conversation (session) gets its own isolated, pre-populated

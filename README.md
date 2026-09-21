@@ -28,7 +28,8 @@ nothing to set up by hand and reads are instant.
 
 ## What this plugin does
 
-It has five parts.
+It has five parts, plus four **advisory notices** added in 0.5.3 (see
+[The advisory notices](#the-advisory-notices-053) below).
 
 **1. A standing reminder (a system-prompt section).** It registers one
 **system-prompt section** (`maintainer-doc-guard`) that lists the maintainer
@@ -231,6 +232,37 @@ staged path can never turn into a blocking path by accident.
 Set `nudge.grace: 0` to restore the pre-0.5 behaviour (deny the first offence),
 `nudge.enabled: false` to drop the stage entirely, or `nudge.afterSteps: 0` to
 keep the nudges but drop the drift check.
+
+### The advisory notices (0.5.3)
+
+Four notices added on top of the five parts. All four are ON by default, all four
+observe only and never block, and all four can be switched from the right-sidebar
+tab (process-level, like the strict-mode switch) — they are deliberately NOT new
+settings-card fields, because that card has a hard ceiling of ten fields.
+
+**On-demand ledger hits.** `lessons.md` is listed alongside the operator's
+documents but is NOT force-injected: a line is delivered only when its `触发`
+field matches the live call — same tool, plus at least one path/command fragment
+present in this call (substring match; `*` splits a fragment into AND-ed pieces).
+One hit per line per session. Cross-conversation reuse comes from the
+workspace-level `<cwd>/.dsh-maintainer-doc-guard/lessons.md`, not from re-stating
+it every step.
+
+**Landing check for deleted numbers.** For `edit`, a net decrease in number runs
+between `old_string` and `new_string` is the objective trace of the observed
+failure — deleting the sentence that carried a number or a conclusion. The notice
+asks for the landing-place check before that deletion stands.
+
+**Completion standard, once per artifact.** After a successful write to a code
+artifact (`.mjs`/`.cjs`/`.js`/`.jsx`/`.ts`/`.tsx`/`.ps1`/`.sh`/`.py`/`.json`/
+`.yml`), the next call is reminded once to state how it was verified and the
+actual reading — not to mark it done.
+
+**Auto-induction.** A failed call on a managed tool, followed by a successful call
+on the SAME target, appends one line to the ledger: the failure's own error text
+as the cause, and which argument keys changed as the fix. Only observed facts;
+shell calls are excluded (a command string has no stable "same target"); capped at
+three lines per session; deduped by full line.
 
 ## Configuration
 
@@ -574,8 +606,8 @@ profile beyond those two declarations, so there is no migration step.
 
 Drop the `dsh.profile.bundles` entry (that is what unmounts it), then the
 `dependencies` line, then `pnpm install`. The documents it manages —
-`plan.md`, `conventions.md`, `stack.md`, `state.md`, `maintainer/README.md` (now under
-`.dsh-maintainer-doc-guard/`) — are ordinary workspace files and are left untouched.
+`plan.md`, `conventions.md`, `stack.md`, `state.md`, `maintainer/README.md` and
+`lessons.md` (the ledger the model itself appends to) — are ordinary workspace files and are left untouched.
 
 ### Note on this repository
 
