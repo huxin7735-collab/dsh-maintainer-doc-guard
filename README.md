@@ -28,7 +28,7 @@ nothing to set up by hand and reads are instant.
 
 ## What this plugin does
 
-It has five parts, plus four **advisory notices** added in 0.5.3 (see
+It has five parts, plus five **advisory notices** added in 0.5.3 (see
 [The advisory notices](#the-advisory-notices-053) below).
 
 **1. A standing reminder (a system-prompt section).** It registers one
@@ -233,10 +233,34 @@ Set `nudge.grace: 0` to restore the pre-0.5 behaviour (deny the first offence),
 `nudge.enabled: false` to drop the stage entirely, or `nudge.afterSteps: 0` to
 keep the nudges but drop the drift check.
 
+### Operator documents are read-only
+
+The model does not write the operator's documents. A `write`, `edit` or `doc_write`
+whose target is `plan.md` or `conventions.md` — or a shell command that WRITES one —
+is denied outright, deliberately WITHOUT the precedent escape the infrastructure
+gate offers: reading another plan.md does not license rewriting this one. The
+denial redirects the model to `lessons.md`, the one document it owns, and records
+that `gate.operatorDocsReadOnly: false` lifts the rule, and the right-sidebar switch
+(`操作者文档只读`) toggles it at runtime — process-level, lost on restart.
+
+The same rule decides what a *seed* can do: `CONVENTIONS_SEED` now carries ten rules (8 workspace notes that stay short and classified, 9 notes live in `write/` and other people''s documents are off limits, 10 delegation to subagents is allowed), but the seed only applies where the file is CREATED. An existing workspace keeps its own `conventions.md` — the plugin never rewrites it.
+
+### Templates, and the three views
+
+The sidebar tab is one tab with three views, because one button per function in a
+single row stopped being readable: **documents** (reload / save / strict mode),
+**settings** (the six process-level switches, open folder, sweep orphans), and
+**templates** (save the current `conventions.md` as a named template, then apply any
+template to the current workspace). Templates live in a SHARED store —
+`$DSH_HOME/maintainer-doc-guard-templates/` — precisely so a set of iron rules can be
+carried into a workspace whose `conventions.md` already exists, which the seed can
+never do. Both directions go through the panel (the operator's channel), never
+through the model's gate.
+
 ### The advisory notices (0.5.3)
 
-Four notices added on top of the five parts. All four are ON by default, all four
-observe only and never block, and all four can be switched from the right-sidebar
+Five notices added on top of the five parts. All five are ON by default, all five
+observe only and never block, and all five can be switched from the right-sidebar
 tab (process-level, like the strict-mode switch) — they are deliberately NOT new
 settings-card fields, because that card has a hard ceiling of ten fields.
 
@@ -302,6 +326,14 @@ that is a noticeably more comfortable long-run experience than 4.0.
    `cordis.patch.yml`.
 8. **A notice is advice, not a guarantee.** Only the precedent and intent gates
    actually deny, and both let the call through after a bounded number of tries.
+
+**A delegated child's report is input, not a conclusion.** After a `subagent` or
+`subagent_fork` result lands, the parent is reminded once to re-run the key
+readings before adopting a number, a bound or a counterexample; to check the work
+tree (`git status --short`), because a child told to be read-only can still create
+files — that is an instruction, not a sandbox; and to specify the output path
+positively next time instead of only forbidding writes. Armed on the result and
+delivered on the next tool call, like the completion reminder.
 
 ## Configuration
 

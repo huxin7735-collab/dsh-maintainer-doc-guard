@@ -12,7 +12,22 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 only the lines whose `触发` field matches the live call — and it fills itself in
 when a failure is followed by a success on the same target.**
 
-### Added — four advisory notices
+### Added — five advisory notices
+
+- The sidebar tab is now one tab with three views (documents / settings /
+  templates), and templates can be saved from and applied to any workspace:
+  `GET|PUT /dsh-maintainer-doc-guard/templates`, stored in
+  `$DSH_HOME/maintainer-doc-guard-templates/` so they survive across projects.
+
+- `CONVENTIONS_SEED` grows to ten rules: 8 workspace notes (short, classified, updated when a step fails), 9 notes live in `write/` and other people''s documents are not touched, 10 delegation to subagents is allowed.
+- The maintained-document list now states the ledger''s classification rule: `lessons.md` carries only "will recur" error routes; project knowledge, progress, the technical route and TODOs belong in workspace notes.
+
+- Operator documents (`plan.md`, `conventions.md`) are READ-ONLY for the model: a
+  write, an edit or a shell write targeting one is denied outright, with no
+  precedent escape, and the denial points at `lessons.md`. Configurable via
+  `gate.operatorDocsReadOnly`.
+- The read-only rule has a runtime counterpart: the right-sidebar switch
+  `操作者文档只读` toggles it for the process.
 - **On-demand ledger hits**: a ledger line is delivered only when its trigger
   matches the live call (same tool plus a path/command fragment present in the
   call; substring match, `*` splits a fragment into AND-ed pieces). One hit per
@@ -42,6 +57,11 @@ when a failure is followed by a success on the same target.**
   is left alone.
 - The document section force-injects `plan.md` + `conventions.md`; the ledger is
   still listed but no longer injected every step.
+- Read the 0.5.0 anchor design note below with care: `order` (10150) applies to
+  `delivery: 'section'` only. The default is `delivery: 'message'`, which appends
+  the anchor as the request's LAST message once per user message, so the anchor is
+  not part of the system prompt and no prompt prefix is invalidated by it. The
+  stale header comment that said otherwise is corrected in this release.
 - The precedent gate's shell rule is clause-scoped: a guarded path and a write
   signal must appear in the same statement.
 
