@@ -598,6 +598,20 @@ Requires dsh `0.1.5-rc.*` and Node >= 20. The plugin is **build-free**: `lib/` i
 the shipped source, there is no compile step, and it depends on nothing but the
 harness itself.
 
+### Which branch targets which dsh version
+
+Both lines live in this one repository. dsh loads a bundle by its package name
+from `node_modules`, so a single profile carries **one** version at a time — pick
+the branch that matches the dsh you actually run.
+
+| Branch      | Target dsh   | Release tag        | Status |
+| ----------- | ------------ | ------------------ | ------ |
+| `main`      | `0.1.5-rc.*` | plain `v0.5.x`     | the line described by this README by default |
+| `dsh-0.2.0` | `0.2.0-rc.2` | `v0.5.x-dsh0.2.0`  | adapter for the 0.2.0-era harness API |
+
+Releases on the 0.2.0 line carry a `-dsh0.2.0` tag suffix because a git tag is
+unique per repository while both lines advance their version number in step.
+
 ### Quick install (recommended)
 
 ```
